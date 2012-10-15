@@ -1,0 +1,59 @@
+#!/usr/bin/env node
+
+var exec = require("child_process").exec,
+    path = require('path'),
+    fs = require('fs'),
+    common = require('./common'),
+    argv = common.parseArgv(process.argv), // 格式化的argv {_:[], 'a': '', ..}
+    _argv = argv._, // 存放所有非-- -的参数信息
+    _argvLen = _argv.length,
+    execJs;
+
+// fes | fes -* | fes -* * | fes --*
+if (_argvLen === 2) {
+    showDirectory(_argv[1], argv.hasOwnProperty('h') || argv.hasOwnProperty('help'));
+    process.exit(1);
+}
+
+execJs = require('./' + _argv[2]);
+
+
+// 是否是需要输出帮助信息
+if (argv.hasOwnProperty('h') || argv.hasOwnProperty('help')) {
+    if (execJs.help) {
+        common.outputHelpInfo(_argv[2], subJs.help());
+    } else {
+        common.info('There is no help document for this command');
+    }
+} else {
+    // 删除node fes moduleName
+    _argv.splice(0, 3);
+    execJs.init(argv);
+}
+
+/**
+ * @description 展示fe.scripts目录下的所有目录
+ * @param {String} pathname 路径名
+ * @param {Boolean} isHelp 是展示help信息还是直接展示可以跟的文件
+ * @return
+ */
+function showDirectory(pathname, isHelp) {
+    if (!isHelp) common.info('You lost -h or --help?');
+    exec('ls ' + __dirname + ' -l | grep ^d', function(error, stdout, stderr) {
+        if (error) {
+            common.error(error);
+            process.exit(1);
+        }
+        if (stderr) {
+            common.info(stderr);
+        }
+        if (stdout) {
+            common.info('You can continue with:');
+            common.log(stdout.match(/[^ ]+(?:\n|$)/g).map(function(item) {
+                if (!item) return false;
+                return item.replace(/\n/, '');
+            }).join('    '));
+        }
+    });
+}
+/* vim: set ft=javascript : */
