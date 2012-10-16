@@ -6,13 +6,14 @@ exports.init = function(argv) {
     var cwd = process.cwd(),
         dirname = path.join(cwd, argv.d || argv.dir),
         filename = path.join(cwd, argv.file || 'data.json'),
-        format = path.format; // json or ,  default is path model
+        format = argv.format; // json or ,  default is path model
     fs.exists(dirname, function(exists) {
         if (exists) {
             findFile(dirname, {}, function(fileObject) {
                 if (format !== 'json') {
-                    var obj = {};
-                    fileObject = jsonToPath(obj, fileObject);
+                    fileObject = jsonToPath(fileObject);
+                } else {
+                    jsonToPath(fileObject);
                 }
                 fs.writeFile(filename, JSON.stringify(fileObject, 0, 4), 'utf-8', function(err) {
                     if (err) common.error('Write file: ', filename, ' error!');
@@ -49,14 +50,15 @@ function isIgnoreFile(file) {
     return file.indexOf('.') === 0;
 }
 
-function jsonToPath(obj, fileObject, pathname) {
+function jsonToPath(fileObject, obj, pathname) {
+    obj = obj || {};
     pathname = pathname || '';
     if (common.getType(fileObject) === 'object') {
         for(var key in fileObject) {
             if (common.getType(fileObject[key]) === 'object') {
-                jsonToPath(obj, fileObject[key], (pathname && pathname + '/') + key);
+                jsonToPath(fileObject[key], obj, pathname + '/' + key);
             } else {
-                obj[key] = (pathname && pathname + '/') + fileObject[key];
+                obj[key] = fileObject[key] = pathname + '/' + fileObject[key];
             }
         }
     } else {

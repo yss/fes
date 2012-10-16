@@ -11,10 +11,9 @@ var exec = require("child_process").exec,
 
 // fes | fes -* | fes -* * | fes --*
 if (_argvLen === 2) {
-    showDirectory(_argv[1], argv.hasOwnProperty('h') || argv.hasOwnProperty('help'));
-    process.exit(1);
+    showDirectory(argv.hasOwnProperty('h') || argv.hasOwnProperty('help'));
+    return;
 }
-
 execJs = require('./' + _argv[2]);
 
 
@@ -33,15 +32,14 @@ if (argv.hasOwnProperty('h') || argv.hasOwnProperty('help')) {
 
 /**
  * @description 展示fe.scripts目录下的所有目录
- * @param {String} pathname 路径名
  * @param {Boolean} isHelp 是展示help信息还是直接展示可以跟的文件
  * @return
  */
-function showDirectory(pathname, isHelp) {
+function showDirectory(isHelp) {
     if (!isHelp) common.info('You lost -h or --help?');
-    exec('ls ' + __dirname + ' -l | grep ^d', function(error, stdout, stderr) {
-        if (error) {
-            common.error(error);
+    exec('ls -l ' + __dirname + ' | grep ^d', function(err, stdout, stderr) {
+        if (err) {
+            common.error(err);
             process.exit(1);
         }
         if (stderr) {
