@@ -5,7 +5,8 @@
  */
 
 var fs = require('fs'),
-    path = require('path');
+    path = require('path'),
+    crypto = require('crypto');
 
 var RED_COLOR = "\033[31m",
     GREEN_COLOR = "\033[32m",
@@ -256,4 +257,17 @@ exports.outputHelpInfo = function(moduleName, o) {
  */
 var getType = exports.getType = function(param) {
     return Object.prototype.toString.call(param).slice(8, -1).toLowerCase();
+}
+
+/**
+ * @description 获取字符串的md5值
+ * @param {String} str 给定的字符串，默认为Math.random().toString()
+ * @param {String} encoding
+ * @param {Boolean} len 是否需要字符串阶段
+ * @return {String}
+ */
+var md5 = exports.md5 = function(str, encoding, len) {
+    str = str || Math.random().toString();
+    str = crypto.createHash('md5').update(str).digest(encoding || 'hex');
+    return len ? str.slice(0, len) : str;
 }
