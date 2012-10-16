@@ -31,11 +31,13 @@ function findFile(dirname, fileObject, callback) {
     var files = fs.readdirSync(dirname);
     var len = files.length,
         file,
+        filepath,
         arr;
     while(len--) {
         file = files[len];
-        if (common.isDirectory(file)) {
-            findFile(path.join(dirname, file), fileObject[file] = {});
+        filepath = path.join(dirname, file);
+        if (common.isDirectory(filepath)) {
+            findFile(filepath, fileObject[file] = {});
         } else {
             if (!isIgnoreFile(file)) {
                 arr = file.split('.');
