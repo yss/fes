@@ -82,7 +82,16 @@ var findDirectory = exports.findDirectory = function(pathname, dirname, directio
  */
 var showMsg = exports.showMsg = function(type, msg, method) {
     var color;
-    msg = typeof msg === 'string' ? msg : Array.prototype.slice.call(msg).join(' ');
+    if (getType(msg) === 'object') {
+        var arrMsg = [];
+        for(var i in msg) {
+            arrMsg.push(msg[i]);
+        }
+        arrMsg.map(function(msg) {
+            return JSON.stringify(msg);
+        });
+        msg = arrMsg.join(' ');
+    }
     method = method || 'log';
     switch(type) {
         case 0:
@@ -195,8 +204,13 @@ function getRealValue(value, defaultValue) {
             // isJSON: isArray, isObject
             if (0 === value.indexOf('{') || 0 === value.indexOf('[')) {
                 try { // 支持JSON格式数据
-                    value = JSON.parse(value);
-                    return value;
+                    // for array
+                    if (0 === value.indexOf('[')) {
+                        value = value.replace(/\,/g, '","').replace('[', '["').replace(']', '"]');
+                    } else if (0 === value.indexOf('{')) {
+                        value = value.replace(/\:/g, '":"').replace('{', '{"').replace('}', '"}');
+                    }
+                    return JSON.parse(value);
                 } catch(e) {
                     return value;
                 }
@@ -216,7 +230,7 @@ function getRealValue(value, defaultValue) {
 /**
  * @description 格式化输出帮助信息
  * @param {String} moduleName 模块名
- * @param {Object} o 帮助信息 {description: '...', params: [{name: '', desc: ''}, {...}], extends: {..}}
+ * @param {Object} o 帮助信息 {description: '...', params: [{name: '', type:'', desc: ''}, {...}], extends: {..}}
  * @return
  */
 exports.outputHelpInfo = function(moduleName, o) {
