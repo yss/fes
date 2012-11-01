@@ -1,6 +1,7 @@
 /**
  * 通用组件
  * 基于Nodejs V0.8+
+ * @author yss.nelson@gmail.com
  * @update
  */
 
@@ -82,16 +83,7 @@ var findDirectory = exports.findDirectory = function(pathname, dirname, directio
  */
 var showMsg = exports.showMsg = function(type, msg, method) {
     var color;
-    if (getType(msg) === 'object') {
-        var arrMsg = [];
-        for(var i in msg) {
-            arrMsg.push(msg[i]);
-        }
-        arrMsg.map(function(msg) {
-            return JSON.stringify(msg);
-        });
-        msg = arrMsg.join(' ');
-    }
+    msg = typeof msg === 'string' ? msg : Array.prototype.slice.call(msg).join(' ');
     method = method || 'log';
     switch(type) {
         case 0:
@@ -204,11 +196,22 @@ function getRealValue(value, defaultValue) {
             // isJSON: isArray, isObject
             if (0 === value.indexOf('{') || 0 === value.indexOf('[')) {
                 try { // 支持JSON格式数据
+                    /*
                     // for array
                     if (0 === value.indexOf('[')) {
-                        value = value.replace(/\,/g, '","').replace('[', '["').replace(']', '"]');
+                        value = value.replace(/\,/g, '","')
+                            .replace('[', '["')
+                            .replace(']', '"]');
                     } else if (0 === value.indexOf('{')) {
-                        value = value.replace(/\:/g, '":"').replace('{', '{"').replace('}', '"}');
+                        value = value.replace(/(\:|\,)/g, '"$1"')
+                            .replace(/\{/g, '{"')
+                            .replace(/\}/g, '"}');
+                    }
+                    */
+                    if (0 === value.indexOf('[') || 0 === value.indexOf('{')) {
+                        value = value.replace(/(\:|\,)/g, '"$1"')
+                            .replace(/(\{|\[)/g, '$1"')
+                            .replace(/(\}|\])/g, '"$1');
                     }
                     return JSON.parse(value);
                 } catch(e) {
