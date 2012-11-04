@@ -1,5 +1,6 @@
 var fs = require('fs'),
     path = require('path'),
+    uglifyjs = require('uglify-js2'),
     common = require('../common');
 
 var options, showLogs;
@@ -16,7 +17,8 @@ exports.init = function(argv) {
         dirname: dirname,
         noRecursion : argv['no-recursion'] || false,
         typeReg : argv.type ? new RegExp('\.(?:' + argv.type.join('|') + ')$') : false,
-        md5: argv.md5 || false
+        md5: argv.md5 || false,
+        compress: argv.compress || argv.c || false
     };
     if (showLogs) {
        common.log('dirname:', dirname, 'filename:', filename);
@@ -42,8 +44,7 @@ exports.init = function(argv) {
         });
     } else {
         common.error('Directory :', dirname, ' is not exists!!!');
-    };
-    
+    }
 };
 
 /**
@@ -77,6 +78,9 @@ function findFile(dirname, fileObject, callback) {
     callback&&callback(fileObject);
 }
 
+/**
+ * 是否是指定格式的文件
+ */
 function isFixedFile(file) {
     if (options.typeReg) {
         return options.typeReg.test(file);
@@ -84,6 +88,9 @@ function isFixedFile(file) {
     return true;
 }
 
+/**
+ * 把文件路径表解析成所需要生成的表
+ */
 function jsonToPath(fileObject, obj, pathname) {
     obj = obj || {};
     pathname = pathname || '';
@@ -92,7 +99,7 @@ function jsonToPath(fileObject, obj, pathname) {
             if (common.getType(fileObject[key]) === 'object') {
                 jsonToPath(fileObject[key], obj, pathname + '/' + key);
             } else {
-                obj[key] = fileObject[key] = outputMd5Path(pathname + '/' + fileObject[key]);
+                obj[key] = fileObject[key] = minify(pathname + '/' + fileObject[key]);
             }
         }
     } else {
@@ -101,17 +108,61 @@ function jsonToPath(fileObject, obj, pathname) {
     return obj;
 }
 
-function outputMd5Path(pathname) {
+/**
+ * 输出文件对应的md5值
+ */
+function outputMd5File(pathname, data) {
     if (options.md5) {
         var pathDirname = path.join(options.dirname, pathname),
             len = common.getType(options.md5) === 'number' ? options.md5 : '',
-            uniqueId = common.md5(fs.readFileSync(pathDirname, 'utf-8'), 'hex', len),
+            content = (data && data.code) || fs.readFileSync(pathDirname, 'utf-8'),
+            uniqueId,
             lastPos = pathname.lastIndexOf('.');
-
-       return pathname.substring(0, lastPos) + '.' + uniqueId + pathname.substring(lastPos);
-    } else {
-        return pathname;
+        if (content) {
+            uniqueId = common.md5(content, 'hex', len);
+        } else {
+            common.error('Empty file:' + pathDirname);
+            process.exit(3);
+        }
+        pathname = pathname.substring(0, lastPos) + '.' + uniqueId + pathname.substring(lastPos);
+        pathDirname = path.join(options.dirname, pathname);
+        fs.writeFile(pathDirname, content, 'utf-8', function(err) {
+            if (err) {
+                common.error('[Error]Write File ' + pathDirname + '.');
+                process.exit(2);
+            }
+        });
     }
+    return pathname;
+}
+
+/**
+ * 压缩文件
+ */
+function minify(pathname) {
+    if (options.compress) {
+        if (/\.(css|js)$/.test(pathname)) {
+            var type = RegExp.$1,
+                fullPath = path.join(options.dirname, pathname),
+                data = {};
+            if (type === 'js') {
+                data.code = uglifyjs.minify(fullPath).code;
+            } else { // if (type === 'css') {
+                data.code  = compressCss(fullPath);
+            }
+            return outputMd5File(pathname, data);
+        }
+    }
+    return outputMd5File(pathname);
+    
+}
+
+function compressCss(pathname) {
+    return fs.readFileSync(pathname, 'utf-8')
+        .replace(/\/\*(.*?)\*\/|[\t\r\n]/g, '')
+        .replace(/ *(\{|\}|\:|\,|\>) */g, '$1')
+        .replace(/0px/g, '0');
+
 }
 
 exports.help = function() {
@@ -121,17 +172,17 @@ exports.help = function() {
             {
                 name: '--help, -h',
                 type: 'Boolean',
-                desc: '帮助信息',
+                desc: '帮助信息'
             },
             {
                 name: '--dir, -d',
                 type: 'Path',
-                desc: '所要自动打包的文件夹路径，相对于当前的路径或绝对路径。如：--dir=./path',
+                desc: '所要自动打包的文件夹路径，相对于当前的路径或绝对路径。如：--dir=./path'
             },
             {
                 name: '--file',
                 type: 'Path|Filename',
-                desc: '所要存储的文件名，可以带路径名，如：--flie=./data/xx.json',
+                desc: '所要存储的文件名，可以带路径名，如：--flie=./data/xx.json'
             },
             {
                 name: '--format',
@@ -150,10 +201,15 @@ exports.help = function() {
             },
             {
                 name: '--md5',
+                type: 'Boolean, Number',
+                desc: '是否计算文件的md5值并增加至后缀前，值为数字时代表md5值的前多少位，默认为false'
+            },
+            {
+                name: '-c, --compress',
                 type: 'Boolean',
-                desc: '是否计算文件的md5值并增加至后缀前，默认为false'
+                desc: '是否压缩，只支持.js & .css后缀文件，默认为false'
             }
 
         ]
     }
-};
+}
