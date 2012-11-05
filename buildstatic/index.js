@@ -181,7 +181,7 @@ exports.help = function() {
             },
             {
                 name: '--file',
-                type: 'Path|Filename',
+                type: 'Path, Filename',
                 desc: '所要存储的文件名，可以带路径名，如：--flie=./data/xx.json'
             },
             {
@@ -197,7 +197,7 @@ exports.help = function() {
             {
                 name: '--type',
                 type: 'Array',
-                desc: '固定的文件后缀类型数组，如：--type=["less", "coffee"]'
+                desc: '固定的文件后缀类型数组，如：--type=[less,coffee]'
             },
             {
                 name: '--md5',

@@ -20,7 +20,7 @@ execJs = require('./' + _argv[2]);
 // 是否是需要输出帮助信息
 if (argv.hasOwnProperty('h') || argv.hasOwnProperty('help')) {
     if (execJs.help) {
-        common.outputHelpInfo(_argv[2], subJs.help());
+        common.outputHelpInfo(_argv[2], execJs.help());
     } else {
         common.info('There is no help document for this command');
     }
