@@ -1,6 +1,7 @@
 var fs = require('fs'),
     path = require('path'),
     uglifyjs = require('uglify-js2'),
+    uglifycss = require('uglifycss'),
     common = require('../common');
 
 var options, showLogs;
@@ -148,7 +149,7 @@ function minify(pathname) {
             if (type === 'js') {
                 data.code = uglifyjs.minify(fullPath).code;
             } else { // if (type === 'css') {
-                data.code  = compressCss(fullPath);
+                data.code = uglifycss.processString(fs.readFileSync(fullPath));
             }
             return outputMd5File(pathname, data);
         }
@@ -157,13 +158,14 @@ function minify(pathname) {
     
 }
 
-function compressCss(pathname) {
-    return fs.readFileSync(pathname, 'utf-8')
-        .replace(/\/\*(.*?)\*\/|[\t\r\n]/g, '')
-        .replace(/ *(\{|\}|\:|\,|\>) */g, '$1')
-        .replace(/0px/g, '0');
-
-}
+// 废弃，使用uglifycss替代
+// function compressCss(pathname) {
+//     return fs.readFileSync(pathname, 'utf-8')
+//         .replace(/\/\*(.*?)\*\/|[\t\r\n]/g, '')
+//         .replace(/ *(\{|\}|\:|\,|\>) */g, '$1')
+//         .replace(/0px/g, '0');
+// 
+// }
 
 exports.help = function() {
     return {

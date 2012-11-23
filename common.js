@@ -19,7 +19,7 @@ var RED_COLOR = "\033[31m",
 
 
 /**
- * @description 判断一个给定路径是否是一个目录（注明：软链的路径对应为一个目录时也返回true）
+ * 判断一个给定路径是否是一个目录（注明：软链的路径对应为一个目录时也返回true）
  * @param {String} pathname 文件完整目录 如：/home/yansong/workspace/git/rest
  * @return {Boolean}
  */
@@ -31,7 +31,7 @@ var isDirectory = exports.isDirectory = function(pathname) {
 };
 
 /**
- * @description 根据给定的路径，查找是否存在给定文件夹
+ * 根据给定的路径，查找是否存在给定文件夹
  * @param {String} pathname 文件完整目录 如：/home/yansong/workspace/git/rest
  * @param {String} dirname 文件夹名
  * @param {String} <option> direction 查找方向 up | down，默认是全部
@@ -49,6 +49,9 @@ var findDirectory = exports.findDirectory = function(pathname, dirname, directio
     }
     function findUp (pname, dname) {
         while(pname && pname !== '/') {
+            if (isHiddenFile(dname)) {
+                continue;
+            }
             if (isDirectory(path.join(pname, dname))) {
                 return path.join(pname, dname);
             }
@@ -64,6 +67,9 @@ var findDirectory = exports.findDirectory = function(pathname, dirname, directio
             var files = fs.readdirSync(pname),
                 len = files.length;
             while(len--) {
+                if (ishiddenfile(files[len]) {
+                    continue;
+                }
                 if (fs.statSync(path.join(pname, files[len])).isDirectory()) {
                     var status = findDown(path.join(pname, files[len]), dname);
                     if (status) return status;
@@ -71,11 +77,17 @@ var findDirectory = exports.findDirectory = function(pathname, dirname, directio
             }
         }
     }
+
+    // 是否是隐藏文件
+    function isHiddenFile(filename) {
+        // /.xxx | .xxx | /xx/xx/.xxx
+        return /\/?\.[^\/]+$/.test(filename);
+    }
     return false;
 };
 
 /**
- * @description 展现给出特殊类型，或者说带颜色的信息
+ * 展现给出特殊类型，或者说带颜色的信息
  * @param {Number|String} type 类型，当为Number时，为错误，正确以及提示三种信息。当为String时，默认为自己指定颜色
  * @param {Array | String} msg 信息
  * @param {String} <option> method 输出方式: log, info, error
@@ -104,7 +116,7 @@ var showMsg = exports.showMsg = function(type, msg, method) {
 }
 
 /**
- * @description 输出正确信息，可以传任意个字符串参数
+ * 输出正确信息，可以传任意个字符串参数
  * @param [{String}, {String}, ... ]
  * @return
  */
@@ -113,7 +125,7 @@ var log = exports.log = function() {
 }
 
 /**
- * @description 输出错误信息，可以传任意个字符串参数
+ * 输出错误信息，可以传任意个字符串参数
  * @param [{String}, {String}, ... ]
  * @return
  */
@@ -122,7 +134,7 @@ var error = exports.error = function() {
 };
 
 /**
- * @description 输出提示信息，可以传任意个字符串参数
+ * 输出提示信息，可以传任意个字符串参数
  * @param [{String}, {String}, ... ]
  * @return
  */
@@ -131,7 +143,7 @@ var info = exports.info = function() {
 }
 
 /**
- * @description 用于格式化或者说解析命令行参数。支持json值参数，参考了optimist的展示方式
+ * 用于格式化或者说解析命令行参数。支持json值参数，参考了optimist的展示方式
  *  -a 2, -a=2, --a=2 => {a:2} | -a, -a=, --a => {a:true}
  *  -a [1,2,3], --a=[1,2,3] => {a: [1,2,3]} | -a {"c":1} => {a:{"c":1}}
  *  [注明] 如果是这样的写法：-a a.txt => {a: 'a.txt'} 并且 a.txt 依旧会存放在 _ 的数组里
@@ -231,7 +243,7 @@ function getRealValue(value, defaultValue) {
 }
 
 /**
- * @description 格式化输出帮助信息
+ * 格式化输出帮助信息
  * @param {String} moduleName 模块名
  * @param {Object} o 帮助信息 {description: '...', params: [{name: '', type:'', desc: ''}, {...}], extends: {..}}
  * @return
@@ -268,7 +280,7 @@ exports.outputHelpInfo = function(moduleName, o) {
 };
 
 /**
- * @description 获取给定参数的类型
+ * 获取给定参数的类型
  * @param {Multiple} param
  * @return {String} undefined | number | string | boolean | object | array | function | null | date | error | regexp
  */
@@ -277,7 +289,7 @@ var getType = exports.getType = function(param) {
 }
 
 /**
- * @description 获取字符串的md5值
+ * 获取字符串的md5值
  * @param {String} str 给定的字符串，默认为Math.random().toString()
  * @param {String} encoding
  * @param {Boolean} len 是否需要字符串阶段

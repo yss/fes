@@ -1,0 +1,25 @@
+{
+    "author": {
+        "name": "yss (http://github.com/yss)",
+        "email": "yss.nelson@gmail.com",
+        "blog": "http://yansong.me"
+    },
+    "name": "fes",
+    "description": "short for fe.scripts, with some useful module for build a script quickly. it is support array & object from command line",
+    "keywords": [
+        "fes",
+        "fe",
+        "fe.scripts",
+        "build a script"
+    ],
+    "version": "1.0.0",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/yss/fes.git"
+    },
+    "main": "./fes",
+    "dependencies": {
+        "uglify-js2": "2.2.0",
+        "uglifycss": "0.0.5"
+    }
+}
