@@ -19,7 +19,7 @@
     },
     "main": "./fes",
     "dependencies": {
-        "uglify-js2": "2.2.0",
-        "uglifycss": "0.0.5"
+        "uglify-js2": "~2.2.0",
+        "cssmin": "~0.3.2"
     }
 }
