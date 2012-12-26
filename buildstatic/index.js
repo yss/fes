@@ -4,38 +4,44 @@ var fs = require('fs'),
     cssmin = require('cssmin').cssmin,
     common = require('../common');
 
-var options, showLogs;
+var options, showLogs, UTF8 = 'utf-8';
 
 exports.init = function(argv) {
     var cwd = process.cwd(),
-        dirname = path.resolve(cwd, argv.d || argv.dir),
+        dirname = path.resolve(cwd, argv.d || argv.dir || ''),
+        outDirname,
         filename = argv.file ? path.resolve(cwd, argv.file) : '',
         format = argv.format; // json or ,  default is path model
         
     showLogs = argv.log || false;
 
+    if (argv.out || argv.o) {
+        outDirname = path.resolve(cwd, argv.o || argv.out);
+        common.createDirectory(outDirname, cwd);
+    }
     options = {
         dirname: dirname,
+        outDirname: outDirname,
         noRecursion : argv['no-recursion'] || false,
         typeReg : argv.type ? new RegExp('\.(?:' + argv.type.join('|') + ')$') : false,
         md5: argv.md5 || false,
         compress: argv.compress || argv.c || false
     };
     if (showLogs) {
-       common.log('dirname:', dirname, 'filename:', filename);
-       common.log(options);
-       argv.type && common.log('type:', argv.type);
+       common.log('dirname:', dirname, 'outDirname:', outDirname, 'filename:', filename);
+       console.log(options);
+       argv.type && console.log('type:', argv.type);
     }
     if (common.isDirectory(dirname)) {
         findFile(dirname, {}, function(fileObject) {
-            showLogs && common.log(fileObject);
+            showLogs && console.log(fileObject);
             if (format !== 'json') {
                 fileObject = jsonToPath(fileObject);
             } else {
                 jsonToPath(fileObject);
             }
             if (filename) {
-                fs.writeFile(filename, JSON.stringify(fileObject, 0, 4), 'utf-8', function(err) {
+                fs.writeFile(filename, JSON.stringify(fileObject, 0, 4), UTF8, function(err) {
                     if (err) common.error('Write file: ', filename, ' error!');
                     else common.log('Write file: ', filename);
                 });
@@ -65,6 +71,10 @@ function findFile(dirname, fileObject, callback) {
     while(len--) {
         file = files[len];
         filepath = path.join(dirname, file);
+        if (/^[\.~]|\.(?:swp|swn|swo|swx|swn|bak)$|~$/.test(file)) {
+            common.log(filepath, 'is been ignored.');
+            continue;
+        }
         if (common.isDirectory(filepath)) {
             if (!options.noRecursion) {
                 findFile(filepath, fileObject[file] = {});
@@ -113,12 +123,14 @@ function jsonToPath(fileObject, obj, pathname) {
  * 输出文件对应的md5值
  */
 function outputMd5File(pathname, data) {
+    var pathDirname = path.join(options.dirname, pathname),
+        content;
     if (options.md5) {
-        var pathDirname = path.join(options.dirname, pathname),
-            len = common.getType(options.md5) === 'number' ? options.md5 : '',
-            content = (data && data.code) || fs.readFileSync(pathDirname, 'utf-8'),
+        var len = common.getType(options.md5) === 'number' ? options.md5 : '',
             uniqueId,
             lastPos = pathname.lastIndexOf('.');
+
+        content = (data && data.code) || fs.readFileSync(pathDirname, UTF8);
         if (content) {
             uniqueId = common.md5(content, 'hex', len);
         } else {
@@ -127,7 +139,13 @@ function outputMd5File(pathname, data) {
         }
         pathname = pathname.substring(0, lastPos) + '.' + uniqueId + pathname.substring(lastPos);
         pathDirname = path.join(options.dirname, pathname);
-        fs.writeFile(pathDirname, content, 'utf-8', function(err) {
+    } else {
+        content = fs.readFileSync(pathDirname, UTF8);
+    }
+    if (options.outDirname) {
+        pathDirname = path.join(options.outDirname, pathname);
+        common.createDirectory(pathDirname, options.outDirname);
+        fs.writeFile(pathDirname, content, UTF8, function(err) {
             if (err) {
                 common.error('[Error]Write File ' + pathDirname + '.');
                 process.exit(2);
@@ -149,7 +167,7 @@ function minify(pathname) {
             if (type === 'js') {
                 data.code = uglifyjs.minify(fullPath).code;
             } else { // if (type === 'css') {
-                data.code = cssmin(fs.readFileSync(fullPath));
+                data.code = cssmin(fs.readFileSync(fullPath, UTF8));
             }
             return outputMd5File(pathname, data);
         }
@@ -160,7 +178,7 @@ function minify(pathname) {
 
 // 废弃，使用cssmin替代
 // function compressCss(pathname) {
-//     return fs.readFileSync(pathname, 'utf-8')
+//     return fs.readFileSync(pathname, UTF8)
 //         .replace(/\/\*(.*?)\*\/|[\t\r\n]/g, '')
 //         .replace(/ *(\{|\}|\:|\,|\>) */g, '$1')
 //         .replace(/0px/g, '0');
@@ -190,6 +208,11 @@ exports.help = function() {
                 name: '--format',
                 type: 'String',
                 desc: '完全按照树状结构生成文件，还是仅仅只是单一的一对一形式。默认是树状结构，需要改变时使用：--format=json'
+            },
+            {
+                name: '-o, --out',
+                type: 'Path',
+                desc: '输出路径'
             },
             {
                 name: '--no-recursion',

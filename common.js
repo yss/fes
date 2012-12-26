@@ -67,7 +67,7 @@ var findDirectory = exports.findDirectory = function(pathname, dirname, directio
             var files = fs.readdirSync(pname),
                 len = files.length;
             while(len--) {
-                if (ishiddenfile(files[len]) {
+                if (isHiddenfile(files[len])) {
                     continue;
                 }
                 if (fs.statSync(path.join(pname, files[len])).isDirectory()) {
@@ -300,3 +300,41 @@ var md5 = exports.md5 = function(str, encoding, len) {
     str = crypto.createHash('md5').update(str).digest(encoding || 'hex');
     return len ? str.slice(0, len) : str;
 }
+/**
+ * 创建文件路径，类似mkdir -p d/i/r
+ * @param {String} filepath 文件路径名
+ * @param {String} startDirname 开始的路径名
+ * @param {Boolean} [isDirectory=false] 给定的filepath是否是一个路径
+ */
+var createDirectory = exports.createDirectory = function(filepath, startDirname, isDirectory) {
+    if (!isDirectory) {
+        filepath = path.dirname(filepath);
+    }
+    if (startDirname) {
+        if (startDirname.substr(startDirname.length-1) === path.sep) {
+            startDirname = startDirname.substr(startDirname.length-1);
+        }
+        if (startDirname === filepath) {
+            return;
+        }
+        // filepath
+        filepath = filepath.replace(startDirname + '/', '');
+    } else {
+        startDirname = path.sep;
+    }
+    var pathArr = filepath.split(path.sep),
+        len = pathArr.length,
+        i = 0;
+    console.log(pathArr)
+    console.log(startDirname, filepath);
+    for (; i<len; i++) {
+        if (!pathArr[i]) {
+            continue;
+        }
+        startDirname = path.join(startDirname, pathArr[i]);
+        if (!fs.existsSync(startDirname)) {
+            fs.mkdirSync(startDirname);
+            log('Create directory: ', startDirname);
+        }
+    }
+};
