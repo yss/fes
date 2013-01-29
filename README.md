@@ -9,8 +9,7 @@ fes本质上只做两件事情。
 2. 对命令行参数进行一次解析，这样每次写方法就不需要自己重新去做命令行解析了。
 
 ## 尝试使用
-`` bash
-./fes buildstatic -h
-./fes csstoless -h
-./fes replacefile --help
-``
+
+    ./fes buildstatic -h
+    ./fes csstoless -h
+    ./fes replacefile --help
