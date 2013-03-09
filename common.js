@@ -78,13 +78,18 @@ var findDirectory = exports.findDirectory = function(pathname, dirname, directio
         }
     }
 
-    // 是否是隐藏文件
-    function isHiddenFile(filename) {
-        // /.xxx | .xxx | /xx/xx/.xxx
-        return /\/?\.[^\/]+$/.test(filename);
-    }
     return false;
 };
+
+/**
+ * 是否是隐藏文件
+ * @param {String} filename
+ */
+var hiddenReg = /(?:^|\/)\.[^\/]+$/;
+isHiddenFile = exports.isHiddenFile = function (filename) {
+    // /.xxx | .xxx | /xx/xx/.xxx
+    return hiddenReg.test(filename);
+}
 
 /**
  * 展现给出特殊类型，或者说带颜色的信息
