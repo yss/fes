@@ -1,7 +1,5 @@
 var fs = require('fs'),
     path = require('path'),
-    uglifyjs = require('uglify-js2'),
-    cssmin = require('cssmin').cssmin,
     common = require('../common');
 
 var options, showLogs, UTF8 = 'utf-8';
@@ -9,26 +7,19 @@ var options, showLogs, UTF8 = 'utf-8';
 exports.init = function(argv) {
     var cwd = process.cwd(),
         dirname = path.resolve(cwd, argv.d || argv.dir || ''),
-        outDirname,
         filename = argv.file ? path.resolve(cwd, argv.file) : '',
         format = argv.format; // json or ,  default is path model
         
     showLogs = argv.log || false;
 
-    if (argv.out || argv.o) {
-        outDirname = path.resolve(cwd, argv.o || argv.out);
-        common.createDirectory(outDirname, cwd);
-    }
     options = {
         dirname: dirname,
-        outDirname: outDirname,
         noRecursion : argv['no-recursion'] || false,
         typeReg : argv.type ? new RegExp('\.(?:' + argv.type.join('|') + ')$') : false,
-        md5: argv.md5 || false,
-        compress: argv.compress || argv.c || false
+        md5: argv.md5 || false
     };
     if (showLogs) {
-       common.log('dirname:', dirname, 'outDirname:', outDirname, 'filename:', filename);
+       common.log('dirname:', dirname, 'filename:', filename);
        console.log(options);
        argv.type && console.log('type:', argv.type);
     }
@@ -104,13 +95,13 @@ function isFixedFile(file) {
  */
 function jsonToPath(fileObject, obj, pathname) {
     obj = obj || {};
-    pathname = pathname || '';
+    pathname = pathname ? pathname + '/' : '';
     if (common.getType(fileObject) === 'object') {
         for(var key in fileObject) {
             if (common.getType(fileObject[key]) === 'object') {
-                jsonToPath(fileObject[key], obj, pathname + '/' + key);
+                jsonToPath(fileObject[key], obj, pathname + key);
             } else {
-                obj[key] = fileObject[key] = minify(pathname + '/' + fileObject[key]);
+                obj[key] = fileObject[key] = outputMd5File(pathname + fileObject[key]);
             }
         }
     } else {
@@ -122,7 +113,7 @@ function jsonToPath(fileObject, obj, pathname) {
 /**
  * 输出文件对应的md5值
  */
-function outputMd5File(pathname, data) {
+function outputMd5File(pathname) {
     var pathDirname = path.join(options.dirname, pathname),
         content;
     if (options.md5) {
@@ -130,7 +121,7 @@ function outputMd5File(pathname, data) {
             uniqueId,
             lastPos = pathname.lastIndexOf('.');
 
-        content = (data && data.code) || fs.readFileSync(pathDirname, UTF8);
+        content = fs.readFileSync(pathDirname, UTF8);
         if (content) {
             uniqueId = common.md5(content, 'hex', len);
         } else {
@@ -142,48 +133,8 @@ function outputMd5File(pathname, data) {
     } else {
         content = fs.readFileSync(pathDirname, UTF8);
     }
-    if (options.outDirname) {
-        pathDirname = path.join(options.outDirname, pathname);
-        common.createDirectory(pathDirname, options.outDirname);
-        fs.writeFile(pathDirname, content, UTF8, function(err) {
-            if (err) {
-                common.error('[Error]Write File ' + pathDirname + '.');
-                process.exit(2);
-            }
-        });
-    }
     return pathname;
 }
-
-/**
- * 压缩文件
- */
-function minify(pathname) {
-    if (options.compress) {
-        if (/\.(css|js)$/.test(pathname)) {
-            var type = RegExp.$1,
-                fullPath = path.join(options.dirname, pathname),
-                data = {};
-            if (type === 'js') {
-                data.code = uglifyjs.minify(fullPath).code;
-            } else { // if (type === 'css') {
-                data.code = cssmin(fs.readFileSync(fullPath, UTF8));
-            }
-            return outputMd5File(pathname, data);
-        }
-    }
-    return outputMd5File(pathname);
-    
-}
-
-// 废弃，使用cssmin替代
-// function compressCss(pathname) {
-//     return fs.readFileSync(pathname, UTF8)
-//         .replace(/\/\*(.*?)\*\/|[\t\r\n]/g, '')
-//         .replace(/ *(\{|\}|\:|\,|\>) */g, '$1')
-//         .replace(/0px/g, '0');
-// 
-// }
 
 exports.help = function() {
     return {
@@ -210,11 +161,6 @@ exports.help = function() {
                 desc: '完全按照树状结构生成文件，还是仅仅只是单一的一对一形式。默认是树状结构，需要改变时使用：--format=json'
             },
             {
-                name: '-o, --out',
-                type: 'Path',
-                desc: '输出路径'
-            },
-            {
                 name: '--no-recursion',
                 type: 'Boolean',
                 desc: '是否递归查询给定的文件路径'
@@ -228,13 +174,18 @@ exports.help = function() {
                 name: '--md5',
                 type: 'Boolean, Number',
                 desc: '是否计算文件的md5值并增加至后缀前，值为数字时代表md5值的前多少位，默认为false'
-            },
-            {
-                name: '-c, --compress',
-                type: 'Boolean',
-                desc: '是否压缩，只支持.js & .css后缀文件，默认为false'
             }
-
+        ],
+        extends: [
+            {
+                name: 'example',
+                desc: [
+                    "buildjs: fes buildstatic --md5=8 -d ./view/static/js/ --type=[js]",
+                    "buildcss: fes buildstatic --md5=8 -d ./view/static/css/ --type=[less] --no-recursion",
+                    "buildtemplate: fes buildstatic --md5=8 -d ./view/template/ --type=[jade] --format=json",
+                    "buildless: fes buildstatic --md5=8 -d ./view/static/css/ --type=[less] --no-recursion -o ./data/less.json"
+                ]
+            }
         ]
     }
 }
