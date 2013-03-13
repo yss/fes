@@ -17,9 +17,5 @@
         "type": "git",
         "url": "git://github.com/yss/fes.git"
     },
-    "main": "./fes",
-    "dependencies": {
-        "uglify-js2": "~2.2.0",
-        "cssmin": "~0.3.2"
-    }
+    "main": "./fes"
 }

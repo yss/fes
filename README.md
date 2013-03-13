@@ -1,6 +1,11 @@
 # fes
 *fe.scripts前端脚本自动化。*
 
+## 安装
+``` sh
+[sudo] npm install fes
+```
+
 建议在/usr/bin/下加入fes的软链( `cd /usr/bin && ln -s yourfespath fes` )。
 ## 说明
 fes本质上只做两件事情。
