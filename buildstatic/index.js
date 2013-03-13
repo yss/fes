@@ -72,7 +72,6 @@ function findFile(dirname, fileObject, callback) {
             }
         } else {
             if (isFixedFile(file)) {
-                console.log(file);
                 fileName = file.substring(0, file.lastIndexOf('.'));
                 fileObject[fileName] = file;
             }
