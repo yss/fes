@@ -7,7 +7,7 @@ var options, showLogs, UTF8 = 'utf-8';
 exports.init = function(argv) {
     var cwd = process.cwd(),
         dirname = path.resolve(cwd, argv.d || argv.dir || ''),
-        filename = argv.file ? path.resolve(cwd, argv.file) : '',
+        filename = (argv.out || argv.o) ? path.resolve(cwd, (argv.out || argv.o)) : '',
         format = argv.format; // json or ,  default is path model
         
     showLogs = argv.log || false;
@@ -26,10 +26,10 @@ exports.init = function(argv) {
     if (common.isDirectory(dirname)) {
         findFile(dirname, {}, function(fileObject) {
             showLogs && console.log(fileObject);
-            if (format !== 'json') {
-                fileObject = jsonToPath(fileObject);
-            } else {
+            if (format) {
                 jsonToPath(fileObject);
+            } else {
+                fileObject = jsonToPath(fileObject);
             }
             if (filename) {
                 fs.writeFile(filename, JSON.stringify(fileObject, 0, 4), UTF8, function(err) {
@@ -58,7 +58,7 @@ function findFile(dirname, fileObject, callback) {
     var len = files.length,
         file,
         filepath,
-        arr;
+        fileName;
     while(len--) {
         file = files[len];
         filepath = path.join(dirname, file);
@@ -72,8 +72,9 @@ function findFile(dirname, fileObject, callback) {
             }
         } else {
             if (isFixedFile(file)) {
-                arr = file.split('.');
-                fileObject[arr[0]] = file;
+                console.log(file);
+                fileName = file.substring(0, file.lastIndexOf('.'));
+                fileObject[fileName] = file;
             }
         }
     }
@@ -151,14 +152,14 @@ exports.help = function() {
                 desc: '所要自动打包的文件夹路径，相对于当前的路径或绝对路径。如：--dir=./path'
             },
             {
-                name: '--file',
-                type: 'Path, Filename',
-                desc: '所要存储的文件名，可以带路径名，如：--flie=./data/xx.json'
+                name: '--out, -o',
+                type: 'Filename',
+                desc: '所要存储的文件名，可以带路径名，如：--out=./data/xx.json'
             },
             {
                 name: '--format',
-                type: 'String',
-                desc: '完全按照树状结构生成文件，还是仅仅只是单一的一对一形式。默认是树状结构，需要改变时使用：--format=json'
+                type: 'Boolean',
+                desc: '完全按照树状结构生成文件，还是仅仅只是单一的一对一形式。默认是一对一形式'
             },
             {
                 name: '--no-recursion',
@@ -182,7 +183,7 @@ exports.help = function() {
                 desc: [
                     "buildjs: fes buildstatic --md5=8 -d ./view/static/js/ --type=[js]",
                     "buildcss: fes buildstatic --md5=8 -d ./view/static/css/ --type=[less] --no-recursion",
-                    "buildtemplate: fes buildstatic --md5=8 -d ./view/template/ --type=[jade] --format=json",
+                    "buildtemplate: fes buildstatic --md5=8 -d ./view/template/ --type=[jade] --format",
                     "buildless: fes buildstatic --md5=8 -d ./view/static/css/ --type=[less] --no-recursion -o ./data/less.json"
                 ]
             }
