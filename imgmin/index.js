@@ -82,7 +82,7 @@ function optimizeImages() {
     pngFiles = {};
     jpgFiles = {};
 
-    if (pngImages.length) {
+    if (jpgImages.length) {
         var jpgCmd = jpgImages.map(function(item) {
             return 'jpegtran -progressive -copy none -outfile ' + item + ' -optimize ' + item;
         })
@@ -96,7 +96,7 @@ function optimizeImages() {
             }
         });
     }
-    if (jpgImages.length) {
+    if (pngImages.length) {
         var pngCmd = pngImages.map(function(item) {
             return 'pngcrush -rem alla -brute -reduce -ow ' + item;
         });
@@ -111,3 +111,26 @@ function optimizeImages() {
         });
     }
 }
+
+exports.help = function() {
+    return {
+        description: '用于jpg，png的图片压缩',
+        params: [
+            {
+                name: '-h, --help',
+                type: 'Boolean',
+                desc: ''
+            }
+        ],
+        extends: [
+            {
+                'name': 'Examples',
+                'desc': [
+                    'fes imgmin --git # 压缩当前Git仓库中改动和增加的图片',
+                    'fes imgmin ../static/img/ # 压缩img目录下的所有图片',
+                    'fes imgmin ../static/img/ ./img/ # 压缩多个目录下的图片'
+                ]
+            }
+        ]
+    }
+};
