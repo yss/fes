@@ -15,10 +15,10 @@ function replaceDirectory(dirname) {
         filepath = path.join(dirname, files[len]);
         if (common.isDirectory(filepath)) {
             replaceDirectory(filepath);
-        } else if (/\.(?:php|js|css)$/.test(filepath)){
+        } else if (/\.(?:jade)$/.test(filepath)){
             var data = fs.readFileSync(filepath, 'utf-8');
-            data = data.replace(/(OutLink|InnerLink)\|click\|(\w)/gi, function($0, $1, $2) {
-                return ($1.indexOf('O') === 0 ? 'OutLink' : 'InnerLink') + '|Click|' + $2.toLowerCase();
+            data = data.replace(/data-evt="/gi, function($0, $1, $2) {
+                return 'data-evt="Inner|Click|';
             });
             fs.writeFileSync(filepath, data, 'utf-8');
         }

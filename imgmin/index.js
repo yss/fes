@@ -15,7 +15,11 @@ exports.init = function(o) {
     for (var i = 0, dirname; i < len; i++) {
         dirname = path.resolve(cwd, o._[i]);
         if (fs.existsSync(dirname)) {
-            findImagesByDirectory(dirname, true);
+            if (fs.statSync(dirname).isFile()) {
+                optimizeFile(dirname);
+            } else {
+                findImagesByDirectory(dirname, true);
+            }
         }
     }
     if (o.git) {
@@ -31,14 +35,14 @@ exports.init = function(o) {
 };
 
 function findImagesByGit(cmd, cwd) {
-    exec(cmd, function(err, stdou, stderr) {
+    exec(cmd, function(err, stdout, stderr) {
         if (err) {
             common.error(err);
             process.exit(2);
         }
         var files = stdout.trim().split('\n');
         for (var i = 0, fullPath, len = files.length; i < len; i++) {
-            fullPath = path.join(cwd, files[i].tirm());
+            fullPath = path.join(cwd, files[i].trim());
             if (isPngFile(fullPath)) {
                 pngFiles[fullPath] = true;
             } else if (isJpgFile(fullPath)) {
@@ -74,6 +78,17 @@ function isJpgFile(filename) {
     return jpgReg.test('' + filename);
 }
 
+function optimizeFile(fullname) {
+    if (isPngFile(fullname)) {
+        pngFiles[fullname] = true;
+    } else if (isJpgFile(fullPath)) {
+        jpgFiles[fullPath] = true;
+    } else {
+        common.info('File: ' + fullname + ' is not a image with jpg/png format.');
+        return;
+    }
+    optimizeImages();
+}
 
 function optimizeImages() {
     var pngImages = Object.keys(pngFiles),

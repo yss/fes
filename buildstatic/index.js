@@ -15,7 +15,7 @@ exports.init = function(argv) {
     options = {
         dirname: dirname,
         noRecursion : argv['no-recursion'] || false,
-        typeReg : argv.type ? new RegExp('\.(?:' + argv.type.join('|') + ')$') : false,
+        typeReg : argv.type ? new RegExp('\\.(?:' + argv.type.join('|') + ')$') : false,
         md5: argv.md5 || false
     };
     if (showLogs) {
@@ -130,9 +130,8 @@ function outputMd5File(pathname) {
         }
         pathname = pathname.substring(0, lastPos) + '.' + uniqueId + pathname.substring(lastPos);
         pathDirname = path.join(options.dirname, pathname);
-    } else {
-        content = fs.readFileSync(pathDirname, UTF8);
     }
+
     return pathname;
 }
 
