@@ -81,8 +81,8 @@ function isJpgFile(filename) {
 function optimizeFile(fullname) {
     if (isPngFile(fullname)) {
         pngFiles[fullname] = true;
-    } else if (isJpgFile(fullPath)) {
-        jpgFiles[fullPath] = true;
+    } else if (isJpgFile(fullname)) {
+        jpgFiles[fullname] = true;
     } else {
         common.info('File: ' + fullname + ' is not a image with jpg/png format.');
         return;
