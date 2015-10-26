@@ -99,7 +99,7 @@ function optimizeImages() {
 
     if (jpgImages.length) {
         var jpgCmd = jpgImages.map(function(item) {
-            return 'jpegtran -progressive -copy none -outfile ' + item + ' -optimize ' + item;
+            return 'jpegtran -progressive -copy none -outfile ' + item + '.tmp -optimize ' + item + '\nmv ' + item + '.tmp ' + item;
         })
         common.info('开始JPG图片压缩...');
         exec(jpgCmd.join('\n'), function(err, stdout, stderr) {
@@ -144,6 +144,13 @@ exports.help = function() {
                     'fes imgmin --git # 压缩当前Git仓库中改动和增加的图片',
                     'fes imgmin ../static/img/ # 压缩img目录下的所有图片',
                     'fes imgmin ../static/img/ ./img/ # 压缩多个目录下的图片'
+                ]
+            },
+            {
+                name: 'Install jpegtran & pngcrush',
+                desc: [
+                    'sudo apt-get install libjpeg-progs # 安装jpegtran',
+                    'sudo apt-get install pngcrush'
                 ]
             }
         ]
